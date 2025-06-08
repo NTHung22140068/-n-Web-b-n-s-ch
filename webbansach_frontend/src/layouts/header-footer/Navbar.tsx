@@ -1,5 +1,5 @@
 import React, { ChangeEvent, useState, useEffect } from "react";
-import { Search, Person, BoxArrowRight } from "react-bootstrap-icons";
+import { Search, Person, BoxArrowRight, Cart } from "react-bootstrap-icons";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 
 interface NavbarProps {
@@ -17,11 +17,12 @@ interface UserData {
 function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
   const [tuKhoaTamThoi, setTuKhoaTamThoi] = useState("");
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [cartItemCount, setCartItemCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Kiểm tra dữ liệu người dùng khi component mount
+    // Kiểm tra dữ liệu người dùng và giỏ hàng khi component mount
     const loadUserData = () => {
       const storedUserData = localStorage.getItem('userData');
       console.log('Dữ liệu từ localStorage:', storedUserData);
@@ -29,6 +30,13 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
         const parsedData = JSON.parse(storedUserData);
         console.log('Dữ liệu đã parse:', parsedData);
         setUserData(parsedData);
+      }
+
+      // Load số lượng sản phẩm trong giỏ hàng
+      const cartItems = localStorage.getItem('cartItems');
+      if (cartItems) {
+        const items = JSON.parse(cartItems);
+        setCartItemCount(items.length);
       }
     };
 
@@ -43,8 +51,22 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
 
     window.addEventListener('loginSuccess', handleLoginSuccess);
 
+    // Lắng nghe thay đổi giỏ hàng
+    const handleCartChange = () => {
+      const cartItems = localStorage.getItem('cartItems');
+      if (cartItems) {
+        const items = JSON.parse(cartItems);
+        setCartItemCount(items.length);
+      } else {
+        setCartItemCount(0);
+      }
+    };
+
+    window.addEventListener('storage', handleCartChange);
+
     return () => {
       window.removeEventListener('loginSuccess', handleLoginSuccess);
+      window.removeEventListener('storage', handleCartChange);
     };
   }, []);
 
@@ -165,8 +187,17 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
           {/* Biểu tượng giỏ hàng*/}
           <ul className="navbar-nav me-2">
             <li className="nav-item">
-              <Link className="nav-link" to="/gio-hang">
-                <i className="fas fa-shopping-cart"></i>
+              <Link 
+                className="nav-link position-relative" 
+                to="/gio-hang"
+                title="Giỏ hàng"
+              >
+                <Cart size={22} />
+                {cartItemCount > 0 && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {cartItemCount}
+                  </span>
+                )}
               </Link>
             </li>
           </ul>

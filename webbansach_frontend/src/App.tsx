@@ -10,6 +10,7 @@ import DangKyNguoiDung from "./layouts/user/DangKyNguoiDung";
 import KichHoatTaiKhoan from "./layouts/user/KichHoatTaiKhoan";
 import LienHePage from "./layouts/contact/LienHePage";
 import DangNhap from "./layouts/user/DangNhap";
+import GioHangPage from "./layouts/cart/GioHangPage";
 
 function App() {
   const [tuKhoaTimKiem, setTuKhoaTimKiem] = useState("");
@@ -39,6 +40,7 @@ function App() {
             element={<KichHoatTaiKhoan />}
           />
           <Route path="/lien-he" element={<LienHePage />} />
+          <Route path="/gio-hang" element={<GioHangPage />} />
         </Routes>
         <Footer />
       </BrowserRouter>
