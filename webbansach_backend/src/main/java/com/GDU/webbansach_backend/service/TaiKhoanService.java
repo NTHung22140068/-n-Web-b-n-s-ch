@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import jakarta.servlet.http.HttpSession;
 
 @Service
 public class TaiKhoanService {
@@ -25,6 +26,9 @@ public class TaiKhoanService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private HttpSession httpSession;
 
     public ResponseEntity<?> dangKyNguoiDung(NguoiDung nguoiDung) {
         // kiểm tra tên đăng nhập đã tồn tại hay chưa
@@ -111,6 +115,17 @@ public class TaiKhoanService {
         response.put("token", token);
         response.put("user", nguoiDung);
         
+        return ResponseEntity.ok(response);
+    }
+
+    public ResponseEntity<?> dangXuat() {
+        // Xóa giỏ hàng trong session
+        httpSession.removeAttribute("cart");
+        
+        // Trả về response với thông báo để frontend xóa giỏ hàng trong localStorage
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Đăng xuất thành công");
+        response.put("clearCart", true); // Thêm flag để frontend biết cần xóa giỏ hàng
         return ResponseEntity.ok(response);
     }
 }

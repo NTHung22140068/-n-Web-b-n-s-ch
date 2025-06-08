@@ -43,8 +43,11 @@ public class SecurityConfiguration {
             cors.configurationSource(request -> {
                 CorsConfiguration corsConfiguration = new CorsConfiguration();
                 corsConfiguration.addAllowedOrigin(Endpoints.front_end_host);
-                corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-                corsConfiguration.addAllowedHeader("*");
+                corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                corsConfiguration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+                corsConfiguration.setExposedHeaders(Arrays.asList("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"));
+                corsConfiguration.setAllowCredentials(true);
+                corsConfiguration.setMaxAge(3600L);
                 return corsConfiguration;
             });
         }));

@@ -11,8 +11,8 @@ import KichHoatTaiKhoan from "./layouts/user/KichHoatTaiKhoan";
 import LienHePage from "./layouts/contact/LienHePage";
 import DangNhap from "./layouts/user/DangNhap";
 import GioHangPage from "./layouts/cart/GioHangPage";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [tuKhoaTimKiem, setTuKhoaTimKiem] = useState("");
@@ -45,7 +45,7 @@ function App() {
           <Route path="/gio-hang" element={<GioHangPage />} />
         </Routes>
         <Footer />
-        <ToastContainer 
+        <ToastContainer
           position="bottom-right"
           autoClose={2000}
           hideProgressBar={false}
@@ -56,12 +56,12 @@ function App() {
           draggable
           pauseOnHover
           theme="colored"
-          style={{ fontSize: '16px' }}
+          style={{ fontSize: "16px" }}
         />
       </BrowserRouter>
     </div>
   );
 }
 
-// update
+// update 1.0
 export default App;

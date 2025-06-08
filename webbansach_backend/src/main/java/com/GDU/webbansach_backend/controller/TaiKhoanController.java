@@ -8,7 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true", maxAge = 3600)
 @RequestMapping("/tai-khoan")
 public class TaiKhoanController {
     @Autowired
@@ -31,6 +31,12 @@ public class TaiKhoanController {
     @PostMapping("/dang-nhap")
     public ResponseEntity<?> dangNhap(@RequestBody NguoiDung nguoiDung) {
         ResponseEntity<?> response = taiKhoanService.dangNhap(nguoiDung.getTenDangNhap(), nguoiDung.getMatKhau());
+        return response;
+    }
+
+    @PostMapping("/dang-xuat")
+    public ResponseEntity<?> dangXuat() {
+        ResponseEntity<?> response = taiKhoanService.dangXuat();
         return response;
     }
 }

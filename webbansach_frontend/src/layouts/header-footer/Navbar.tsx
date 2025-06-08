@@ -2,6 +2,7 @@ import React, { ChangeEvent, useState, useEffect } from "react";
 import { Search, Person, BoxArrowRight, Cart } from "react-bootstrap-icons";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { CART_UPDATE_EVENT } from "../utils/CartUtils";
+import { toast } from 'react-toastify';
 
 interface NavbarProps {
   tuKhoaTimKiem: string;
@@ -71,11 +72,60 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
-    setUserData(null);
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        // Nếu không có token, chỉ cần xóa dữ liệu local
+        localStorage.removeItem('userData');
+        localStorage.removeItem('cartItems');
+        setUserData(null);
+        setCartItemCount(0);
+        window.dispatchEvent(new Event(CART_UPDATE_EVENT));
+        toast.success('👋 Đăng xuất thành công!');
+        navigate('/');
+        return;
+      }
+
+      // Gọi API đăng xuất
+      const response = await fetch('http://localhost:8080/tai-khoan/dang-xuat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include'
+      });
+
+      // Xóa dữ liệu local bất kể API thành công hay thất bại
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('cartItems');
+      setUserData(null);
+      setCartItemCount(0);
+      window.dispatchEvent(new Event(CART_UPDATE_EVENT));
+
+      if (response.ok) {
+        const data = await response.json();
+        toast.success('👋 Đăng xuất thành công!');
+      } else {
+        console.warn('Đăng xuất API không thành công, nhưng đã xóa dữ liệu local');
+      }
+
+      // Luôn chuyển hướng về trang chủ
+      navigate('/');
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất:', error);
+      // Vẫn xóa dữ liệu local ngay cả khi có lỗi
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('cartItems');
+      setUserData(null);
+      setCartItemCount(0);
+      window.dispatchEvent(new Event(CART_UPDATE_EVENT));
+      toast.success('👋 Đăng xuất thành công!');
+      navigate('/');
+    }
   };
 
   const handleHomeClick = (event: React.MouseEvent) => {
