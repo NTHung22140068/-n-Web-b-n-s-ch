@@ -57,8 +57,7 @@ const ChiTietSanPham: React.FC = () => {
         sach.maSach,
         sach.tenSach,
         sach.giaBan,
-        soLuong,
-        hinhAnhUrl
+        soLuong
       );
       if (success) {
         navigate('/gio-hang');
@@ -80,8 +79,7 @@ const ChiTietSanPham: React.FC = () => {
         sach.maSach,
         sach.tenSach,
         sach.giaBan,
-        soLuong,
-        hinhAnhUrl
+        soLuong
       );
     }
   };

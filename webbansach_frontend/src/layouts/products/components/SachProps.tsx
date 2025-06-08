@@ -49,17 +49,12 @@ const SachPropsInterface: React.FC<SachPropsInterface> = (props) => {
       return;
     }
 
-    // Lấy URL hình ảnh đầu tiên nếu có
-    const firstImage = danhSachAnh[0];
-    const hinhAnhUrl = firstImage && firstImage.duLieuAnh ? firstImage.duLieuAnh : '';
-
     // Thêm sản phẩm vào giỏ hàng
     addToCart(
       props.sach.maSach,
       props.sach.tenSach,
       props.sach.giaBan,
-      1,
-      hinhAnhUrl
+      1
     );
   };
 

@@ -5,7 +5,6 @@ export interface CartItem {
     tenSach: string;
     giaBan: number;
     soLuong: number;
-    urlHinhAnh?: string;
 }
 
 // Tạo custom event để cập nhật giỏ hàng
@@ -18,8 +17,7 @@ export const addToCart = async (
     maSach: number,
     tenSach: string,
     giaBan: number,
-    soLuong: number = 1,
-    urlHinhAnh?: string
+    soLuong: number = 1
 ) => {
     // Kiểm tra đăng nhập
     const userData = localStorage.getItem('userData');

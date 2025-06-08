@@ -2,16 +2,38 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash, PlusCircle, DashCircle } from "react-bootstrap-icons";
 import { CartItem, removeFromCart, updateCartItemQuantity, getCart } from "../utils/CartUtils";
+import { layMotAnhcuaMotSach } from "../../api/HinhAnhApi";
+import HinhAnhModel from "../../models/HinhAnhModel";
+
+interface CartItemWithImage extends CartItem {
+    hinhAnh?: HinhAnhModel;
+}
 
 const GioHangPage = () => {
-    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [cartItems, setCartItems] = useState<CartItemWithImage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Tải dữ liệu giỏ hàng từ API
         const loadCartItems = async () => {
             const items = await getCart();
-            setCartItems(items);
+            
+            // Lấy hình ảnh cho mỗi sản phẩm
+            const itemsWithImages = await Promise.all(
+                items.map(async (item) => {
+                    try {
+                        const hinhAnhs = await layMotAnhcuaMotSach(item.maSach);
+                        return {
+                            ...item,
+                            hinhAnh: hinhAnhs[0]
+                        };
+                    } catch (error) {
+                        console.error(`Lỗi khi lấy hình ảnh cho sách ${item.maSach}:`, error);
+                        return item;
+                    }
+                })
+            );
+            
+            setCartItems(itemsWithImages);
             setIsLoading(false);
         };
         loadCartItems();
@@ -19,7 +41,6 @@ const GioHangPage = () => {
 
     const handleRemoveItem = async (maSach: number) => {
         await removeFromCart(maSach);
-        // Cập nhật state local
         setCartItems(prevItems => prevItems.filter(item => item.maSach !== maSach));
     };
 
@@ -27,7 +48,6 @@ const GioHangPage = () => {
         if (newQuantity < 1) return;
         
         await updateCartItemQuantity(maSach, newQuantity);
-        // Cập nhật state local
         setCartItems(prevItems =>
             prevItems.map(item =>
                 item.maSach === maSach ? { ...item, soLuong: newQuantity } : item
@@ -81,7 +101,7 @@ const GioHangPage = () => {
                                 <div key={item.maSach} className="row mb-4 align-items-center">
                                     <div className="col-md-2">
                                         <img 
-                                            src={item.urlHinhAnh || '/images/default-book.png'} 
+                                            src={item.hinhAnh?.duLieuAnh || '/images/default-book.png'} 
                                             alt={item.tenSach}
                                             className="img-fluid rounded"
                                         />
