@@ -1,21 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Trash, PlusCircle, DashCircle } from 'react-bootstrap-icons';
-
-interface CartItem {
-    maSach: number;
-    tenSach: string;
-    giaBan: number;
-    soLuong: number;
-    urlHinhAnh: string;
-}
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Trash, PlusCircle, DashCircle } from "react-bootstrap-icons";
+import { CartItem, removeFromCart, updateCartItemQuantity } from "../utils/CartUtils";
 
 const GioHangPage = () => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // TODO: Tải dữ liệu giỏ hàng từ localStorage hoặc API
+        // Tải dữ liệu giỏ hàng từ localStorage
         const loadCartItems = () => {
             const savedCart = localStorage.getItem('cartItems');
             if (savedCart) {
@@ -26,20 +19,22 @@ const GioHangPage = () => {
         loadCartItems();
     }, []);
 
-    const updateQuantity = (maSach: number, newQuantity: number) => {
-        if (newQuantity < 1) return;
-        
-        const updatedItems = cartItems.map(item => 
-            item.maSach === maSach ? { ...item, soLuong: newQuantity } : item
-        );
-        setCartItems(updatedItems);
-        localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+    const handleRemoveItem = (maSach: number) => {
+        removeFromCart(maSach);
+        // Cập nhật state local
+        setCartItems(prevItems => prevItems.filter(item => item.maSach !== maSach));
     };
 
-    const removeItem = (maSach: number) => {
-        const updatedItems = cartItems.filter(item => item.maSach !== maSach);
-        setCartItems(updatedItems);
-        localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+    const handleQuantityChange = (maSach: number, newQuantity: number) => {
+        if (newQuantity < 1) return;
+        
+        updateCartItemQuantity(maSach, newQuantity);
+        // Cập nhật state local
+        setCartItems(prevItems =>
+            prevItems.map(item =>
+                item.maSach === maSach ? { ...item, soLuong: newQuantity } : item
+            )
+        );
     };
 
     const calculateTotal = () => {
@@ -110,7 +105,7 @@ const GioHangPage = () => {
                                         <div className="d-flex align-items-center justify-content-center">
                                             <button 
                                                 className="btn btn-link text-dark p-0"
-                                                onClick={() => updateQuantity(item.maSach, item.soLuong - 1)}
+                                                onClick={() => handleQuantityChange(item.maSach, item.soLuong - 1)}
                                             >
                                                 <DashCircle size={20} />
                                             </button>
@@ -119,12 +114,12 @@ const GioHangPage = () => {
                                                 className="form-control mx-2 text-center" 
                                                 style={{ width: '60px' }}
                                                 value={item.soLuong}
-                                                onChange={(e) => updateQuantity(item.maSach, parseInt(e.target.value) || 1)}
+                                                onChange={(e) => handleQuantityChange(item.maSach, parseInt(e.target.value) || 1)}
                                                 min="1"
                                             />
                                             <button 
                                                 className="btn btn-link text-dark p-0"
-                                                onClick={() => updateQuantity(item.maSach, item.soLuong + 1)}
+                                                onClick={() => handleQuantityChange(item.maSach, item.soLuong + 1)}
                                             >
                                                 <PlusCircle size={20} />
                                             </button>
@@ -133,7 +128,7 @@ const GioHangPage = () => {
                                     <div className="col-md-1 text-end">
                                         <button 
                                             className="btn btn-link text-danger p-0"
-                                            onClick={() => removeItem(item.maSach)}
+                                            onClick={() => handleRemoveItem(item.maSach)}
                                         >
                                             <Trash size={20} />
                                         </button>

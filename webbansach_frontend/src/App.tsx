@@ -46,8 +46,8 @@ function App() {
         </Routes>
         <Footer />
         <ToastContainer 
-          position="top-right"
-          autoClose={3000}
+          position="bottom-right"
+          autoClose={2000}
           hideProgressBar={false}
           newestOnTop={false}
           closeOnClick
@@ -55,7 +55,8 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
+          theme="colored"
+          style={{ fontSize: '16px' }}
         />
       </BrowserRouter>
     </div>

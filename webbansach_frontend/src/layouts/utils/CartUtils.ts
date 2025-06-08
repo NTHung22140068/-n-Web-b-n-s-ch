@@ -8,6 +8,12 @@ export interface CartItem {
     urlHinhAnh?: string;
 }
 
+// Tạo custom event để cập nhật giỏ hàng
+export const CART_UPDATE_EVENT = 'cartUpdate';
+export const dispatchCartUpdateEvent = () => {
+    window.dispatchEvent(new Event(CART_UPDATE_EVENT));
+};
+
 export const addToCart = (
     maSach: number,
     tenSach: string,
@@ -18,7 +24,7 @@ export const addToCart = (
     // Kiểm tra đăng nhập
     const userData = localStorage.getItem('userData');
     if (!userData) {
-        toast.error('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
+        toast.warning('🔒 Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!');
         return false;
     }
 
@@ -36,6 +42,7 @@ export const addToCart = (
         if (existingItemIndex !== -1) {
             // Nếu sản phẩm đã tồn tại, tăng số lượng
             cartItems[existingItemIndex].soLuong += soLuong;
+            toast.info(`📚 Đã cập nhật số lượng sách "${tenSach}" trong giỏ hàng!`);
         } else {
             // Nếu sản phẩm chưa tồn tại, thêm mới
             cartItems.push({
@@ -45,19 +52,72 @@ export const addToCart = (
                 soLuong,
                 urlHinhAnh
             });
+            toast.success(`🛒 Đã thêm sách "${tenSach}" vào giỏ hàng!`);
         }
 
         // Lưu giỏ hàng mới vào localStorage
         localStorage.setItem('cartItems', JSON.stringify(cartItems));
 
-        // Kích hoạt sự kiện storage để Navbar cập nhật số lượng
-        window.dispatchEvent(new Event('storage'));
+        // Kích hoạt custom event để cập nhật UI
+        dispatchCartUpdateEvent();
 
-        toast.success('Đã thêm sản phẩm vào giỏ hàng!');
         return true;
     } catch (error) {
         console.error('Lỗi khi thêm vào giỏ hàng:', error);
-        toast.error('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!');
+        toast.error('❌ Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!');
         return false;
+    }
+};
+
+// Hàm xóa sản phẩm khỏi giỏ hàng
+export const removeFromCart = (maSach: number) => {
+    try {
+        // Lấy giỏ hàng hiện tại
+        const existingCart = localStorage.getItem('cartItems');
+        if (!existingCart) return;
+
+        let cartItems: CartItem[] = JSON.parse(existingCart);
+        
+        // Lọc bỏ sản phẩm cần xóa
+        cartItems = cartItems.filter(item => item.maSach !== maSach);
+        
+        // Cập nhật localStorage
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+        
+        // Kích hoạt custom event để cập nhật UI
+        dispatchCartUpdateEvent();
+        
+        toast.info('🗑️ Đã xóa sản phẩm khỏi giỏ hàng!');
+    } catch (error) {
+        console.error('Lỗi khi xóa sản phẩm:', error);
+        toast.error('❌ Có lỗi xảy ra khi xóa sản phẩm!');
+    }
+};
+
+// Hàm cập nhật số lượng sản phẩm trong giỏ hàng
+export const updateCartItemQuantity = (maSach: number, newQuantity: number) => {
+    try {
+        // Lấy giỏ hàng hiện tại
+        const existingCart = localStorage.getItem('cartItems');
+        if (!existingCart) return;
+
+        let cartItems: CartItem[] = JSON.parse(existingCart);
+        
+        // Tìm và cập nhật số lượng sản phẩm
+        const itemIndex = cartItems.findIndex(item => item.maSach === maSach);
+        if (itemIndex !== -1) {
+            cartItems[itemIndex].soLuong = newQuantity;
+            
+            // Cập nhật localStorage
+            localStorage.setItem('cartItems', JSON.stringify(cartItems));
+            
+            // Kích hoạt custom event để cập nhật UI
+            dispatchCartUpdateEvent();
+            
+            toast.info('📝 Đã cập nhật số lượng sản phẩm!');
+        }
+    } catch (error) {
+        console.error('Lỗi khi cập nhật số lượng:', error);
+        toast.error('❌ Có lỗi xảy ra khi cập nhật số lượng!');
     }
 }; 

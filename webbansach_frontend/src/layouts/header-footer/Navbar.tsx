@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useState, useEffect } from "react";
 import { Search, Person, BoxArrowRight, Cart } from "react-bootstrap-icons";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { CART_UPDATE_EVENT } from "../utils/CartUtils";
 
 interface NavbarProps {
   tuKhoaTimKiem: string;
@@ -21,6 +22,17 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Hàm cập nhật số lượng sản phẩm trong giỏ hàng
+  const updateCartCount = () => {
+    const cartItems = localStorage.getItem('cartItems');
+    if (cartItems) {
+      const items = JSON.parse(cartItems);
+      setCartItemCount(items.length);
+    } else {
+      setCartItemCount(0);
+    }
+  };
+
   useEffect(() => {
     // Kiểm tra dữ liệu người dùng và giỏ hàng khi component mount
     const loadUserData = () => {
@@ -33,11 +45,7 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
       }
 
       // Load số lượng sản phẩm trong giỏ hàng
-      const cartItems = localStorage.getItem('cartItems');
-      if (cartItems) {
-        const items = JSON.parse(cartItems);
-        setCartItemCount(items.length);
-      }
+      updateCartCount();
     };
 
     loadUserData();
@@ -49,24 +57,17 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
       setUserData(customEvent.detail);
     };
 
-    window.addEventListener('loginSuccess', handleLoginSuccess);
-
-    // Lắng nghe thay đổi giỏ hàng
-    const handleCartChange = () => {
-      const cartItems = localStorage.getItem('cartItems');
-      if (cartItems) {
-        const items = JSON.parse(cartItems);
-        setCartItemCount(items.length);
-      } else {
-        setCartItemCount(0);
-      }
+    // Lắng nghe sự kiện cập nhật giỏ hàng
+    const handleCartUpdate = () => {
+      updateCartCount();
     };
 
-    window.addEventListener('storage', handleCartChange);
+    window.addEventListener('loginSuccess', handleLoginSuccess);
+    window.addEventListener(CART_UPDATE_EVENT, handleCartUpdate);
 
     return () => {
       window.removeEventListener('loginSuccess', handleLoginSuccess);
-      window.removeEventListener('storage', handleCartChange);
+      window.removeEventListener(CART_UPDATE_EVENT, handleCartUpdate);
     };
   }, []);
 
@@ -233,43 +234,40 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
                   </div>
                 </li>
                 <li>
-                  <Link className="dropdown-item py-2" to="/thong-tin-tai-khoan">
-                    <Person className="me-2" />
+                  <Link to="/thong-tin-tai-khoan" className="dropdown-item">
+                    <Person className="me-2" size={16} />
                     Thông tin tài khoản
                   </Link>
                 </li>
                 <li>
-                  <Link className="dropdown-item py-2" to="/don-hang">
-                    <i className="fas fa-shopping-bag me-2"></i>
-                    Đơn hàng của tôi
+                  <Link to="/lich-su-mua-hang" className="dropdown-item">
+                    <i className="fas fa-history me-2"></i>
+                    Lịch sử mua hàng
                   </Link>
                 </li>
-                <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
                 <li>
                   <button 
-                    className="dropdown-item py-2 text-danger" 
+                    className="dropdown-item text-danger" 
                     onClick={handleLogout}
                   >
-                    <BoxArrowRight className="me-2" />
+                    <BoxArrowRight className="me-2" size={16} />
                     Đăng xuất
                   </button>
                 </li>
               </ul>
             </div>
           ) : (
-            <ul className="navbar-nav align-items-center">
-              <li className="nav-item me-2">
-                <Link className="nav-link d-flex align-items-center" to="/dangNhap">
-                  <Person className="me-1" size={20} />
-                  <span>Đăng nhập</span>
-                </Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/dangKy">
-                  Đăng ký
-                </Link>
-              </li>
-            </ul>
+            <div className="d-flex">
+              <Link to="/dangNhap" className="btn btn-outline-light me-2">
+                Đăng nhập
+              </Link>
+              <Link to="/dangKy" className="btn btn-light">
+                Đăng ký
+              </Link>
+            </div>
           )}
         </div>
       </div>
