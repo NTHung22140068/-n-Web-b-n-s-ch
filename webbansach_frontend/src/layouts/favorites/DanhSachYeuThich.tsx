@@ -4,14 +4,38 @@ import { FavoriteBook, getFavorites, removeFromFavorites, FAVORITE_UPDATE_EVENT 
 import { addToCart } from '../utils/CartUtils';
 import renderRating from '../utils/SaoXepHang';
 import dinhDangSo from '../utils/DinhDangSo';
+import HinhAnhModel from '../../models/HinhAnhModel';
+import { layToanBoHinhAnhCuaMotSach } from '../../api/HinhAnhApi';
+
+interface BookWithImage extends FavoriteBook {
+    duLieuAnh?: string;
+}
 
 const DanhSachYeuThich: React.FC = () => {
-    const [favorites, setFavorites] = useState<FavoriteBook[]>([]);
+    const [favorites, setFavorites] = useState<BookWithImage[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const loadFavorites = async () => {
         const items = await getFavorites();
-        setFavorites(items);
+        // Lấy hình ảnh cho mỗi sách
+        const itemsWithImages = await Promise.all(
+            items.map(async (book) => {
+                try {
+                    const hinhAnhData = await layToanBoHinhAnhCuaMotSach(book.maSach);
+                    return {
+                        ...book,
+                        duLieuAnh: hinhAnhData[0]?.duLieuAnh || '/images/default-book.png'
+                    };
+                } catch (error) {
+                    console.error('Lỗi khi lấy hình ảnh:', error);
+                    return {
+                        ...book,
+                        duLieuAnh: '/images/default-book.png'
+                    };
+                }
+            })
+        );
+        setFavorites(itemsWithImages);
         setIsLoading(false);
     };
 
@@ -30,7 +54,7 @@ const DanhSachYeuThich: React.FC = () => {
         setFavorites(prevFavorites => prevFavorites.filter(book => book.maSach !== maSach));
     };
 
-    const handleAddToCart = async (book: FavoriteBook) => {
+    const handleAddToCart = async (book: BookWithImage) => {
         await addToCart(book.maSach, book.tenSach, book.giaBan, 1);
     };
 
@@ -67,7 +91,7 @@ const DanhSachYeuThich: React.FC = () => {
                         <div className="card h-100">
                             <Link to={`/sach/${book.maSach}`}>
                                 <img
-                                    src={`http://localhost:8081/hinh-anh/sach/${book.maSach}`}
+                                    src={book.duLieuAnh}
                                     alt={book.tenSach}
                                     className="card-img-top"
                                     style={{ height: "200px", objectFit: "cover" }}

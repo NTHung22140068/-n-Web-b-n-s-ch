@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import SachModel from "../../models/SachModel";
 import { laySachTheoMaSach } from "../../api/SachApi";
-import HinhAnhSanPham from "./components/HinhAnhSanPham";
+import HinhAnhModel from "../../models/HinhAnhModel";
+import { layToanBoHinhAnhCuaMotSach } from "../../api/HinhAnhApi";
 import DanhGiaSanPham from "./components/DanhGiaSanPham";
 import renderRating from "../utils/SaoXepHang";
 import dinhDangSo from "../utils/DinhDangSo";
@@ -25,22 +26,29 @@ const ChiTietSanPham: React.FC = () => {
   }
 
   const [sach, setSach] = useState<SachModel | null>(null);
+  const [danhSachAnh, setDanhSachAnh] = useState<HinhAnhModel[]>([]);
   const [dangTaiDuLieu, setDangTaiDuLieu] = useState(true);
-  const [baoLoi, setBaoLoi] = useState(null);
+  const [baoLoi, setBaoLoi] = useState<string | null>(null);
   const [soLuong, setSoLuong] = useState(1);
   const [isLiked, setIsLiked] = useState(false);
-  const [hinhAnhUrl, setHinhAnhUrl] = useState("");
 
   useEffect(() => {
-    laySachTheoMaSach(maSachNumber)
-      .then((sach) => {
-        setSach(sach);
+    const fetchData = async () => {
+      try {
+        const [sachData, hinhAnhData] = await Promise.all([
+          laySachTheoMaSach(maSachNumber),
+          layToanBoHinhAnhCuaMotSach(maSachNumber)
+        ]);
+        setSach(sachData);
+        setDanhSachAnh(hinhAnhData);
         setDangTaiDuLieu(false);
-      })
-      .catch((error) => {
-        setBaoLoi(error.message);
+      } catch (error) {
+        setBaoLoi(error instanceof Error ? error.message : 'An error occurred');
         setDangTaiDuLieu(false);
-      });
+      }
+    };
+
+    fetchData();
 
     // Kiểm tra trạng thái yêu thích
     const checkFavoriteStatus = async () => {
@@ -131,11 +139,6 @@ const ChiTietSanPham: React.FC = () => {
     }
   };
 
-  // Lấy URL hình ảnh từ component HinhAnhSanPham
-  const handleHinhAnhLoaded = (url: string) => {
-    setHinhAnhUrl(url);
-  };
-
   if (dangTaiDuLieu) {
     return (
       <div className="container mt-5 text-center">
@@ -166,20 +169,28 @@ const ChiTietSanPham: React.FC = () => {
     );
   }
 
+  let duLieuAnh: string = "";
+  if (danhSachAnh[0] && danhSachAnh[0].duLieuAnh) {
+    duLieuAnh = danhSachAnh[0].duLieuAnh;
+  }
+
   return (
     <div className="container">
       <div className="row mt-4 mb-4">
         <div className="col-4">
-          <HinhAnhSanPham maSach={maSachNumber} onHinhAnhLoaded={handleHinhAnhLoaded} />
+          <img
+            src={duLieuAnh || '/images/default-book.png'}
+            alt={sach.tenSach}
+            className="img-fluid rounded"
+            style={{ width: "100%", maxHeight: "500px", objectFit: "contain" }}
+          />
         </div>
         <div className="col-8">
           <div className="row">
             <div className="col-8">
               <h1>{sach.tenSach}</h1>
               <h4>
-                {renderRating(
-                  sach.trungBinhXepHang || 0
-                )}
+                {renderRating(sach.trungBinhXepHang || 0)}
               </h4>
               <h4>{dinhDangSo(sach.giaBan)} đ</h4>
               <hr />
