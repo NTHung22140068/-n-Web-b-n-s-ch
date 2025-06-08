@@ -1,34 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash, PlusCircle, DashCircle } from "react-bootstrap-icons";
-import { CartItem, removeFromCart, updateCartItemQuantity } from "../utils/CartUtils";
+import { CartItem, removeFromCart, updateCartItemQuantity, getCart } from "../utils/CartUtils";
 
 const GioHangPage = () => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Tải dữ liệu giỏ hàng từ localStorage
-        const loadCartItems = () => {
-            const savedCart = localStorage.getItem('cartItems');
-            if (savedCart) {
-                setCartItems(JSON.parse(savedCart));
-            }
+        // Tải dữ liệu giỏ hàng từ API
+        const loadCartItems = async () => {
+            const items = await getCart();
+            setCartItems(items);
             setIsLoading(false);
         };
         loadCartItems();
     }, []);
 
-    const handleRemoveItem = (maSach: number) => {
-        removeFromCart(maSach);
+    const handleRemoveItem = async (maSach: number) => {
+        await removeFromCart(maSach);
         // Cập nhật state local
         setCartItems(prevItems => prevItems.filter(item => item.maSach !== maSach));
     };
 
-    const handleQuantityChange = (maSach: number, newQuantity: number) => {
+    const handleQuantityChange = async (maSach: number, newQuantity: number) => {
         if (newQuantity < 1) return;
         
-        updateCartItemQuantity(maSach, newQuantity);
+        await updateCartItemQuantity(maSach, newQuantity);
         // Cập nhật state local
         setCartItems(prevItems =>
             prevItems.map(item =>

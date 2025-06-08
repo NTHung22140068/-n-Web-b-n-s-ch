@@ -43,7 +43,7 @@ const ChiTietSanPham: React.FC = () => {
     }
   };
 
-  const handleMuaNgay = () => {
+  const handleMuaNgay = async () => {
     // Kiểm tra đăng nhập
     const userData = localStorage.getItem('userData');
     if (!userData) {
@@ -53,7 +53,7 @@ const ChiTietSanPham: React.FC = () => {
 
     // Thêm vào giỏ hàng và chuyển đến trang giỏ hàng
     if (sach && sach.tenSach && sach.giaBan) {
-      const success = addToCart(
+      const success = await addToCart(
         sach.maSach,
         sach.tenSach,
         sach.giaBan,
@@ -66,7 +66,7 @@ const ChiTietSanPham: React.FC = () => {
     }
   };
 
-  const handleThemVaoGioHang = () => {
+  const handleThemVaoGioHang = async () => {
     // Kiểm tra đăng nhập
     const userData = localStorage.getItem('userData');
     if (!userData) {
@@ -76,7 +76,7 @@ const ChiTietSanPham: React.FC = () => {
 
     // Thêm vào giỏ hàng
     if (sach && sach.tenSach && sach.giaBan) {
-      addToCart(
+      await addToCart(
         sach.maSach,
         sach.tenSach,
         sach.giaBan,

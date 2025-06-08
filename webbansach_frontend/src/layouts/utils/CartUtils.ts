@@ -14,7 +14,7 @@ export const dispatchCartUpdateEvent = () => {
     window.dispatchEvent(new Event(CART_UPDATE_EVENT));
 };
 
-export const addToCart = (
+export const addToCart = async (
     maSach: number,
     tenSach: string,
     giaBan: number,
@@ -29,39 +29,31 @@ export const addToCart = (
     }
 
     try {
-        // Lấy giỏ hàng hiện tại từ localStorage
-        let cartItems: CartItem[] = [];
-        const existingCart = localStorage.getItem('cartItems');
-        if (existingCart) {
-            cartItems = JSON.parse(existingCart);
-        }
+        const user = JSON.parse(userData);
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`http://localhost:8081/gio-hang/them`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                tenDangNhap: user.tenDangNhap,
+                maSach: maSach,
+                soLuong: soLuong
+            })
+        });
 
-        // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
-        const existingItemIndex = cartItems.findIndex(item => item.maSach === maSach);
-
-        if (existingItemIndex !== -1) {
-            // Nếu sản phẩm đã tồn tại, tăng số lượng
-            cartItems[existingItemIndex].soLuong += soLuong;
-            toast.info(`📚 Đã cập nhật số lượng sách "${tenSach}" trong giỏ hàng!`);
-        } else {
-            // Nếu sản phẩm chưa tồn tại, thêm mới
-            cartItems.push({
-                maSach,
-                tenSach,
-                giaBan,
-                soLuong,
-                urlHinhAnh
-            });
+        if (response.ok) {
             toast.success(`🛒 Đã thêm sách "${tenSach}" vào giỏ hàng!`);
+            dispatchCartUpdateEvent();
+            return true;
+        } else {
+            const error = await response.text();
+            toast.error(`❌ ${error}`);
+            return false;
         }
-
-        // Lưu giỏ hàng mới vào localStorage
-        localStorage.setItem('cartItems', JSON.stringify(cartItems));
-
-        // Kích hoạt custom event để cập nhật UI
-        dispatchCartUpdateEvent();
-
-        return true;
     } catch (error) {
         console.error('Lỗi khi thêm vào giỏ hàng:', error);
         toast.error('❌ Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng!');
@@ -69,55 +61,100 @@ export const addToCart = (
     }
 };
 
-// Hàm xóa sản phẩm khỏi giỏ hàng
-export const removeFromCart = (maSach: number) => {
-    try {
-        // Lấy giỏ hàng hiện tại
-        const existingCart = localStorage.getItem('cartItems');
-        if (!existingCart) return;
+export const removeFromCart = async (maSach: number) => {
+    const userData = localStorage.getItem('userData');
+    if (!userData) return;
 
-        let cartItems: CartItem[] = JSON.parse(existingCart);
+    try {
+        const user = JSON.parse(userData);
+        const token = localStorage.getItem('token');
         
-        // Lọc bỏ sản phẩm cần xóa
-        cartItems = cartItems.filter(item => item.maSach !== maSach);
-        
-        // Cập nhật localStorage
-        localStorage.setItem('cartItems', JSON.stringify(cartItems));
-        
-        // Kích hoạt custom event để cập nhật UI
-        dispatchCartUpdateEvent();
-        
-        toast.info('🗑️ Đã xóa sản phẩm khỏi giỏ hàng!');
+        const response = await fetch(`http://localhost:8081/gio-hang/xoa-san-pham`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                tenDangNhap: user.tenDangNhap,
+                maSach: maSach
+            })
+        });
+
+        if (response.ok) {
+            dispatchCartUpdateEvent();
+            toast.info('🗑️ Đã xóa sản phẩm khỏi giỏ hàng!');
+        } else {
+            const error = await response.text();
+            toast.error(`❌ ${error}`);
+        }
     } catch (error) {
         console.error('Lỗi khi xóa sản phẩm:', error);
         toast.error('❌ Có lỗi xảy ra khi xóa sản phẩm!');
     }
 };
 
-// Hàm cập nhật số lượng sản phẩm trong giỏ hàng
-export const updateCartItemQuantity = (maSach: number, newQuantity: number) => {
-    try {
-        // Lấy giỏ hàng hiện tại
-        const existingCart = localStorage.getItem('cartItems');
-        if (!existingCart) return;
+export const updateCartItemQuantity = async (maSach: number, newQuantity: number) => {
+    const userData = localStorage.getItem('userData');
+    if (!userData) return;
 
-        let cartItems: CartItem[] = JSON.parse(existingCart);
+    try {
+        const user = JSON.parse(userData);
+        const token = localStorage.getItem('token');
         
-        // Tìm và cập nhật số lượng sản phẩm
-        const itemIndex = cartItems.findIndex(item => item.maSach === maSach);
-        if (itemIndex !== -1) {
-            cartItems[itemIndex].soLuong = newQuantity;
-            
-            // Cập nhật localStorage
-            localStorage.setItem('cartItems', JSON.stringify(cartItems));
-            
-            // Kích hoạt custom event để cập nhật UI
+        const response = await fetch(`http://localhost:8081/gio-hang/cap-nhat`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                tenDangNhap: user.tenDangNhap,
+                maSach: maSach,
+                soLuong: newQuantity
+            })
+        });
+
+        if (response.ok) {
             dispatchCartUpdateEvent();
-            
             toast.info('📝 Đã cập nhật số lượng sản phẩm!');
+        } else {
+            const error = await response.text();
+            toast.error(`❌ ${error}`);
         }
     } catch (error) {
         console.error('Lỗi khi cập nhật số lượng:', error);
         toast.error('❌ Có lỗi xảy ra khi cập nhật số lượng!');
+    }
+};
+
+export const getCart = async (): Promise<CartItem[]> => {
+    const userData = localStorage.getItem('userData');
+    if (!userData) return [];
+
+    try {
+        const user = JSON.parse(userData);
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`http://localhost:8081/gio-hang/lay?tenDangNhap=${encodeURIComponent(user.tenDangNhap)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            const cartItems = await response.json();
+            return cartItems;
+        } else {
+            const error = await response.text();
+            toast.error(`❌ ${error}`);
+            return [];
+        }
+    } catch (error) {
+        console.error('Lỗi khi lấy giỏ hàng:', error);
+        toast.error('❌ Có lỗi xảy ra khi lấy giỏ hàng!');
+        return [];
     }
 }; 

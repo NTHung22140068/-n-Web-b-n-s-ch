@@ -3,6 +3,7 @@ import { Search, Person, BoxArrowRight, Cart } from "react-bootstrap-icons";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { CART_UPDATE_EVENT } from "../utils/CartUtils";
 import { toast } from 'react-toastify';
+import { getCart } from "../utils/CartUtils";
 
 interface NavbarProps {
   tuKhoaTimKiem: string;
@@ -24,43 +25,36 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
   const location = useLocation();
 
   // Hàm cập nhật số lượng sản phẩm trong giỏ hàng
-  const updateCartCount = () => {
-    const cartItems = localStorage.getItem('cartItems');
-    if (cartItems) {
-      const items = JSON.parse(cartItems);
-      setCartItemCount(items.length);
-    } else {
-      setCartItemCount(0);
-    }
+  const updateCartCount = async () => {
+    const items = await getCart();
+    setCartItemCount(items.length);
   };
 
   useEffect(() => {
     // Kiểm tra dữ liệu người dùng và giỏ hàng khi component mount
-    const loadUserData = () => {
+    const loadUserData = async () => {
       const storedUserData = localStorage.getItem('userData');
-      console.log('Dữ liệu từ localStorage:', storedUserData);
       if (storedUserData) {
         const parsedData = JSON.parse(storedUserData);
-        console.log('Dữ liệu đã parse:', parsedData);
         setUserData(parsedData);
+        // Load số lượng sản phẩm trong giỏ hàng
+        await updateCartCount();
       }
-
-      // Load số lượng sản phẩm trong giỏ hàng
-      updateCartCount();
     };
 
     loadUserData();
 
     // Lắng nghe sự kiện đăng nhập thành công
-    const handleLoginSuccess = (event: Event) => {
+    const handleLoginSuccess = async (event: Event) => {
       const customEvent = event as CustomEvent;
-      console.log('Nhận được event loginSuccess:', customEvent.detail);
       setUserData(customEvent.detail);
+      // Cập nhật giỏ hàng khi đăng nhập thành công
+      await updateCartCount();
     };
 
     // Lắng nghe sự kiện cập nhật giỏ hàng
-    const handleCartUpdate = () => {
-      updateCartCount();
+    const handleCartUpdate = async () => {
+      await updateCartCount();
     };
 
     window.addEventListener('loginSuccess', handleLoginSuccess);
