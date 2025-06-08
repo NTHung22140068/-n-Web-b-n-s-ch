@@ -88,7 +88,7 @@ const GioHangPage = () => {
                                 <div key={item.maSach} className="row mb-4 align-items-center">
                                     <div className="col-md-2">
                                         <img 
-                                            src={item.urlHinhAnh} 
+                                            src={item.urlHinhAnh || '/images/default-book.png'} 
                                             alt={item.tenSach}
                                             className="img-fluid rounded"
                                         />

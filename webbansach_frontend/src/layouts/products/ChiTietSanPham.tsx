@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import SachModel from "../../models/SachModel";
 import { laySachTheoMaSach } from "../../api/SachApi";
 import HinhAnhSanPham from "./components/HinhAnhSanPham";
 import DanhGiaSanPham from "./components/DanhGiaSanPham";
 import renderRating from "../utils/SaoXepHang";
 import dinhDangSo from "../utils/DinhDangSo";
+import { addToCart } from "../utils/CartUtils";
 
 const ChiTietSanPham: React.FC = () => {
+  const navigate = useNavigate();
   // Lấy mã sách từ URL
   const { maSach } = useParams();
 
@@ -19,16 +21,17 @@ const ChiTietSanPham: React.FC = () => {
     }
   } catch (error) {
     maSachNumber = 0;
-    console.error("Erorr", error);
+    console.error("Error", error);
   }
 
   const [sach, setSach] = useState<SachModel | null>(null);
   const [dangTaiDuLieu, setDangTaiDuLieu] = useState(true);
   const [baoLoi, setBaoLoi] = useState(null);
   const [soLuong, setSoLuong] = useState(1);
+  const [hinhAnhUrl, setHinhAnhUrl] = useState("");
 
   const tangSoLuong = () => {
-    const soLuongTonKho = sach && sach.soLuong ? sach.soLuong : 0;
+    const soLuongTonKho = sach?.soLuong || 0;
     if (soLuong < soLuongTonKho) {
       setSoLuong(soLuong + 1);
     }
@@ -40,13 +43,52 @@ const ChiTietSanPham: React.FC = () => {
     }
   };
 
-  const handleMuaNgay = () => {};
+  const handleMuaNgay = () => {
+    // Kiểm tra đăng nhập
+    const userData = localStorage.getItem('userData');
+    if (!userData) {
+      navigate('/dangNhap');
+      return;
+    }
 
-  const handleThemVaoGioHang = () => {};
+    // Thêm vào giỏ hàng và chuyển đến trang giỏ hàng
+    if (sach && sach.tenSach && sach.giaBan) {
+      const success = addToCart(
+        sach.maSach,
+        sach.tenSach,
+        sach.giaBan,
+        soLuong,
+        hinhAnhUrl
+      );
+      if (success) {
+        navigate('/gio-hang');
+      }
+    }
+  };
+
+  const handleThemVaoGioHang = () => {
+    // Kiểm tra đăng nhập
+    const userData = localStorage.getItem('userData');
+    if (!userData) {
+      navigate('/dangNhap');
+      return;
+    }
+
+    // Thêm vào giỏ hàng
+    if (sach && sach.tenSach && sach.giaBan) {
+      addToCart(
+        sach.maSach,
+        sach.tenSach,
+        sach.giaBan,
+        soLuong,
+        hinhAnhUrl
+      );
+    }
+  };
 
   const handleSoLuongChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const soLuongMoi = parseInt(event.target.value);
-    const soLuongTonKho = sach && sach.soLuong ? sach.soLuong : 0;
+    const soLuongTonKho = sach?.soLuong || 0;
     if (!isNaN(soLuongMoi) && soLuongMoi >= 1 && soLuongMoi <= soLuongTonKho) {
       setSoLuong(soLuongMoi);
     }
@@ -64,6 +106,11 @@ const ChiTietSanPham: React.FC = () => {
       });
   }, [maSach]);
 
+  // Lấy URL hình ảnh từ component HinhAnhSanPham
+  const handleHinhAnhLoaded = (url: string) => {
+    setHinhAnhUrl(url);
+  };
+
   if (dangTaiDuLieu) {
     return (
       <div>
@@ -80,10 +127,10 @@ const ChiTietSanPham: React.FC = () => {
     );
   }
 
-  if (!sach) {
+  if (!sach || !sach.tenSach || !sach.giaBan) {
     return (
       <div>
-        <h1>Sách không tồn tại</h1>
+        <h1>Sách không tồn tại hoặc thiếu thông tin</h1>
       </div>
     );
   }
@@ -92,7 +139,7 @@ const ChiTietSanPham: React.FC = () => {
     <div className="container">
       <div className="row mt-4 mb-4">
         <div className="col-4">
-          <HinhAnhSanPham maSach={maSachNumber} />
+          <HinhAnhSanPham maSach={maSachNumber} onHinhAnhLoaded={handleHinhAnhLoaded} />
         </div>
         <div className="col-8">
           <div className="row">
@@ -100,12 +147,12 @@ const ChiTietSanPham: React.FC = () => {
               <h1>{sach.tenSach}</h1>
               <h4>
                 {renderRating(
-                  sach.trungBinhXepHang ? sach.trungBinhXepHang : 0
+                  sach.trungBinhXepHang || 0
                 )}
               </h4>
               <h4>{dinhDangSo(sach.giaBan)} đ</h4>
               <hr />
-              <div dangerouslySetInnerHTML={{ __html: sach.moTa + "" }} />
+              <div dangerouslySetInnerHTML={{ __html: sach.moTa || '' }} />
               <hr />
             </div>
             <div className="col-4">
@@ -132,12 +179,10 @@ const ChiTietSanPham: React.FC = () => {
                     +
                   </button>
                 </div>
-                {sach.giaBan && (
-                  <div className="mt-2 text-center">
-                    Số tiền tạm tính <br />
-                    <h4>{dinhDangSo(soLuong * sach.giaBan)} đ</h4>
-                  </div>
-                )}
+                <div className="mt-2 text-center">
+                  Số tiền tạm tính <br />
+                  <h4>{dinhDangSo(soLuong * sach.giaBan)} đ</h4>
+                </div>
                 <div className="d-grid gap-2">
                   <button
                     type="button"

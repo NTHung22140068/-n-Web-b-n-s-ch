@@ -6,6 +6,7 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 
 interface HinhAnhSanPham {
   maSach: number;
+  onHinhAnhLoaded?: (url: string) => void;
 }
 
 const HinhAnhSanPham: React.FC<HinhAnhSanPham> = (props) => {
@@ -21,6 +22,10 @@ const HinhAnhSanPham: React.FC<HinhAnhSanPham> = (props) => {
         .then((danhSach) => {
           setDanhSachAnh(danhSach);
           setDangTaiDuLieu(false);
+          // Gọi callback với URL của ảnh đầu tiên nếu có
+          if (danhSach.length > 0 && props.onHinhAnhLoaded) {
+            props.onHinhAnhLoaded(danhSach[0].duLieuAnh || '');
+          }
         })
         .catch((error) => {
           setDangTaiDuLieu(false);
