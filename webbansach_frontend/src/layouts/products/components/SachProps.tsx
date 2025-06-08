@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import SachModel from "../../../models/SachModel";
 import HinhAnhModel from "../../../models/HinhAnhModel";
 import { layToanBoHinhAnhCuaMotSach } from "../../../api/HinhAnhApi";
@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import renderRating from "../../utils/SaoXepHang";
 import dinhDangSo from "../../utils/DinhDangSo";
 import { addToCart } from "../../utils/CartUtils";
+import { addToFavorites, removeFromFavorites, checkIsFavorite } from "../../utils/FavoriteUtils";
 
 interface SachPropsInterface {
   sach: SachModel;
@@ -14,10 +15,10 @@ interface SachPropsInterface {
 const SachPropsInterface: React.FC<SachPropsInterface> = (props) => {
   const navigate = useNavigate();
   const maSach: number = props.sach.maSach;
-
   const [danhSachAnh, setDanhSachAnh] = React.useState<HinhAnhModel[]>([]);
   const [dangTaiDuLieu, setDangTaiDuLieu] = React.useState(true);
   const [baoLoi, setBaoLoi] = React.useState(null);
+  const [isLiked, setIsLiked] = useState(false);
 
   useEffect(
     () => {
@@ -33,6 +34,15 @@ const SachPropsInterface: React.FC<SachPropsInterface> = (props) => {
     },
     [maSach]
   );
+
+  useEffect(() => {
+    // Kiểm tra trạng thái yêu thích khi component được mount
+    const checkFavoriteStatus = async () => {
+      const status = await checkIsFavorite(props.sach.maSach);
+      setIsLiked(status);
+    };
+    checkFavoriteStatus();
+  }, [props.sach.maSach]);
 
   const handleThemVaoGioHang = () => {
     // Kiểm tra đăng nhập và thêm vào giỏ hàng
@@ -56,6 +66,22 @@ const SachPropsInterface: React.FC<SachPropsInterface> = (props) => {
       props.sach.giaBan,
       1
     );
+  };
+
+  const handleToggleFavorite = async () => {
+    const userData = localStorage.getItem('userData');
+    if (!userData) {
+      navigate('/dangNhap');
+      return;
+    }
+
+    if (isLiked) {
+      const success = await removeFromFavorites(props.sach.maSach);
+      if (success) setIsLiked(false);
+    } else {
+      const success = await addToFavorites(props.sach.maSach);
+      if (success) setIsLiked(true);
+    }
   };
 
   if (dangTaiDuLieu) {
@@ -120,9 +146,13 @@ const SachPropsInterface: React.FC<SachPropsInterface> = (props) => {
               {renderRating(props.sach.trungBinhXepHang || 0)}
             </div>
             <div className="col-6 text-end">
-              <a href="#" className="btn btn-secondary btn-blog me-2">
+              <button 
+                className={`btn ${isLiked ? 'btn-danger' : 'btn-outline-danger'} btn-blog me-2`}
+                onClick={handleToggleFavorite}
+                title={isLiked ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
+              >
                 <i className="fas fa-heart"></i>
-              </a>
+              </button>
               <button 
                 className="btn btn-danger btn-block"
                 onClick={handleThemVaoGioHang}

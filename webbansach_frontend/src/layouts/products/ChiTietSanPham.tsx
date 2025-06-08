@@ -7,10 +7,10 @@ import DanhGiaSanPham from "./components/DanhGiaSanPham";
 import renderRating from "../utils/SaoXepHang";
 import dinhDangSo from "../utils/DinhDangSo";
 import { addToCart } from "../utils/CartUtils";
+import { addToFavorites, removeFromFavorites, checkIsFavorite } from "../utils/FavoriteUtils";
 
 const ChiTietSanPham: React.FC = () => {
   const navigate = useNavigate();
-  // Lấy mã sách từ URL
   const { maSach } = useParams();
 
   let maSachNumber = 0;
@@ -28,7 +28,30 @@ const ChiTietSanPham: React.FC = () => {
   const [dangTaiDuLieu, setDangTaiDuLieu] = useState(true);
   const [baoLoi, setBaoLoi] = useState(null);
   const [soLuong, setSoLuong] = useState(1);
+  const [isLiked, setIsLiked] = useState(false);
   const [hinhAnhUrl, setHinhAnhUrl] = useState("");
+
+  useEffect(() => {
+    laySachTheoMaSach(maSachNumber)
+      .then((sach) => {
+        setSach(sach);
+        setDangTaiDuLieu(false);
+      })
+      .catch((error) => {
+        setBaoLoi(error.message);
+        setDangTaiDuLieu(false);
+      });
+
+    // Kiểm tra trạng thái yêu thích
+    const checkFavoriteStatus = async () => {
+      const userData = localStorage.getItem('userData');
+      if (userData) {
+        const status = await checkIsFavorite(maSachNumber);
+        setIsLiked(status);
+      }
+    };
+    checkFavoriteStatus();
+  }, [maSachNumber]);
 
   const tangSoLuong = () => {
     const soLuongTonKho = sach?.soLuong || 0;
@@ -44,14 +67,12 @@ const ChiTietSanPham: React.FC = () => {
   };
 
   const handleMuaNgay = async () => {
-    // Kiểm tra đăng nhập
     const userData = localStorage.getItem('userData');
     if (!userData) {
       navigate('/dangNhap');
       return;
     }
 
-    // Thêm vào giỏ hàng và chuyển đến trang giỏ hàng
     if (sach && sach.tenSach && sach.giaBan) {
       const success = await addToCart(
         sach.maSach,
@@ -66,14 +87,12 @@ const ChiTietSanPham: React.FC = () => {
   };
 
   const handleThemVaoGioHang = async () => {
-    // Kiểm tra đăng nhập
     const userData = localStorage.getItem('userData');
     if (!userData) {
       navigate('/dangNhap');
       return;
     }
 
-    // Thêm vào giỏ hàng
     if (sach && sach.tenSach && sach.giaBan) {
       await addToCart(
         sach.maSach,
@@ -81,6 +100,26 @@ const ChiTietSanPham: React.FC = () => {
         sach.giaBan,
         soLuong
       );
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    const userData = localStorage.getItem('userData');
+    if (!userData) {
+      navigate('/dangNhap');
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        const success = await removeFromFavorites(maSachNumber);
+        if (success) setIsLiked(false);
+      } else {
+        const success = await addToFavorites(maSachNumber);
+        if (success) setIsLiked(true);
+      }
+    } catch (error) {
+      console.error('Lỗi khi thao tác với yêu thích:', error);
     }
   };
 
@@ -92,18 +131,6 @@ const ChiTietSanPham: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    laySachTheoMaSach(maSachNumber)
-      .then((sach) => {
-        setSach(sach);
-        setDangTaiDuLieu(false);
-      })
-      .catch((error) => {
-        setBaoLoi(error.message);
-        setDangTaiDuLieu(false);
-      });
-  }, [maSach]);
-
   // Lấy URL hình ảnh từ component HinhAnhSanPham
   const handleHinhAnhLoaded = (url: string) => {
     setHinhAnhUrl(url);
@@ -111,24 +138,30 @@ const ChiTietSanPham: React.FC = () => {
 
   if (dangTaiDuLieu) {
     return (
-      <div>
-        <h1>Đang tải dữ liệu</h1>
+      <div className="container mt-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Đang tải...</span>
+        </div>
       </div>
     );
   }
 
   if (baoLoi) {
     return (
-      <div>
-        <h1>Gặp lỗi: {baoLoi}</h1>
+      <div className="container mt-5">
+        <div className="alert alert-danger" role="alert">
+          Gặp lỗi: {baoLoi}
+        </div>
       </div>
     );
   }
 
   if (!sach || !sach.tenSach || !sach.giaBan) {
     return (
-      <div>
-        <h1>Sách không tồn tại hoặc thiếu thông tin</h1>
+      <div className="container mt-5">
+        <div className="alert alert-warning" role="alert">
+          Sách không tồn tại hoặc thiếu thông tin
+        </div>
       </div>
     );
   }
@@ -195,6 +228,14 @@ const ChiTietSanPham: React.FC = () => {
                     onClick={handleThemVaoGioHang}
                   >
                     Thêm vào giỏ hàng
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${isLiked ? 'btn-danger' : 'btn-outline-danger'} mt-2`}
+                    onClick={handleToggleFavorite}
+                  >
+                    <i className="fas fa-heart me-2"></i>
+                    {isLiked ? 'Đã yêu thích' : 'Thêm vào yêu thích'}
                   </button>
                 </div>
               </div>
