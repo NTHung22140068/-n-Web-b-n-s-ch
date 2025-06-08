@@ -8,6 +8,8 @@ import About from "./layouts/about/About";
 import ChiTietSanPham from "./layouts/products/ChiTietSanPham";
 import DangKyNguoiDung from "./layouts/user/DangKyNguoiDung";
 import KichHoatTaiKhoan from "./layouts/user/KichHoatTaiKhoan";
+import LienHePage from "./layouts/contact/LienHePage";
+import DangNhap from "./layouts/user/DangNhap";
 
 function App() {
   const [tuKhoaTimKiem, setTuKhoaTimKiem] = useState("");
@@ -31,10 +33,12 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/sach/:maSach" element={<ChiTietSanPham />} />
           <Route path="/dangKy" element={<DangKyNguoiDung />} />
+          <Route path="/dangNhap" element={<DangNhap />} />
           <Route
             path="/kich-hoat/:email/:maKichHoat"
             element={<KichHoatTaiKhoan />}
           />
+          <Route path="/lien-he" element={<LienHePage />} />
         </Routes>
         <Footer />
       </BrowserRouter>
@@ -42,4 +46,5 @@ function App() {
   );
 }
 
+// update
 export default App;

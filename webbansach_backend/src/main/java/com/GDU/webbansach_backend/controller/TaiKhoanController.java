@@ -27,4 +27,10 @@ public class TaiKhoanController {
 
         return response;
     }
+
+    @PostMapping("/dang-nhap")
+    public ResponseEntity<?> dangNhap(@RequestBody NguoiDung nguoiDung) {
+        ResponseEntity<?> response = taiKhoanService.dangNhap(nguoiDung.getTenDangNhap(), nguoiDung.getMatKhau());
+        return response;
+    }
 }

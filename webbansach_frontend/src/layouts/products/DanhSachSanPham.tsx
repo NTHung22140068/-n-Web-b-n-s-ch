@@ -20,35 +20,40 @@ function DanhSachSanPham({ tuKhoaTimKiem, maTheLoai }: DanhSachSanPhamProps) {
   const [tongSoTrang, setTongSoTrang] = useState(0);
   const [tongSoSach, setTongSoSach] = useState(0);
 
-  useEffect(
-    () => {
-      if (tuKhoaTimKiem === "" && maTheLoai == 0) {
-        layToanBoSach(trangHienTai - 1)
-          .then((kq) => {
-            setDanhSachQuyenSach(kq.ketQua);
-            setTongSoTrang(kq.tongSoTrang);
-            setDangTaiDuLieu(false);
-          })
-          .catch((error) => {
-            setBaoLoi(error.message);
-          });
-      } else {
-        timKiemSach(tuKhoaTimKiem, maTheLoai)
-          .then((kq) => {
-            setDanhSachQuyenSach(kq.ketQua);
-            setTongSoTrang(kq.tongSoTrang);
-            setDangTaiDuLieu(false);
-          })
-          .catch((error) => {
-            setBaoLoi(error.message);
-          });
-      }
-    },
-    [trangHienTai, tuKhoaTimKiem, maTheLoai] // chỉ gọi 1 lần
-  );
+  useEffect(() => {
+    setTrangHienTai(1);
+  }, [tuKhoaTimKiem, maTheLoai]);
+
+  useEffect(() => {
+    setDangTaiDuLieu(true);
+    if (tuKhoaTimKiem === "" && maTheLoai == 0) {
+      layToanBoSach(trangHienTai - 1)
+        .then((kq) => {
+          setDanhSachQuyenSach(kq.ketQua);
+          setTongSoTrang(kq.tongSoTrang);
+          setDangTaiDuLieu(false);
+        })
+        .catch((error) => {
+          setBaoLoi(error.message);
+          setDangTaiDuLieu(false);
+        });
+    } else {
+      timKiemSach(tuKhoaTimKiem, maTheLoai)
+        .then((kq) => {
+          setDanhSachQuyenSach(kq.ketQua);
+          setTongSoTrang(kq.tongSoTrang);
+          setDangTaiDuLieu(false);
+        })
+        .catch((error) => {
+          setBaoLoi(error.message);
+          setDangTaiDuLieu(false);
+        });
+    }
+  }, [trangHienTai, tuKhoaTimKiem, maTheLoai]);
 
   const phanTrang = (trang: number) => {
     setTrangHienTai(trang);
+    window.scrollTo(0, 0);
   };
 
   if (dangTaiDuLieu) {

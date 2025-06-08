@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Component
 public class JwtService {
-    public static final String SERECT = "ABC1234";
+    private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     // tạo JWT dựa trên tên đăng nhập
     public String generteToken(String tenDangNhap) {
@@ -35,15 +35,14 @@ public class JwtService {
                 .compact();
     }
 
-    // Lấy serert key
+    // Lấy secret key
     private Key getSigneKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SERECT);
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     //  Trích xuất thông tin
     private Claims extractAllClaims(String token) {
         return Jwts.parser().setSigningKey(getSigneKey()).parseClaimsJws(token).getBody();
-
     }
 }

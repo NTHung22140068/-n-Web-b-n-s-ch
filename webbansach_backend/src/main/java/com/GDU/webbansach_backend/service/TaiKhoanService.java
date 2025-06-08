@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -20,6 +22,9 @@ public class TaiKhoanService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private JwtService jwtService;
 
     public ResponseEntity<?> dangKyNguoiDung(NguoiDung nguoiDung) {
         // kiểm tra tên đăng nhập đã tồn tại hay chưa
@@ -84,5 +89,28 @@ public class TaiKhoanService {
         } else {
             return ResponseEntity.badRequest().body(new ThongBao("Mã kích hoạt không chính xác."));
         }
+    }
+
+    public ResponseEntity<?> dangNhap(String tenDangNhap, String matKhau) {
+        NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(tenDangNhap);
+        
+        if (nguoiDung == null) {
+            return ResponseEntity.badRequest().body(new ThongBao("Tên đăng nhập không tồn tại."));
+        }
+
+        if (!nguoiDung.isDaKichHoat()) {
+            return ResponseEntity.badRequest().body(new ThongBao("Tài khoản chưa được kích hoạt."));
+        }
+
+        if (!passwordEncoder.matches(matKhau, nguoiDung.getMatKhau())) {
+            return ResponseEntity.badRequest().body(new ThongBao("Mật khẩu không chính xác."));
+        }
+
+        String token = jwtService.generteToken(tenDangNhap);
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("user", nguoiDung);
+        
+        return ResponseEntity.ok(response);
     }
 }
