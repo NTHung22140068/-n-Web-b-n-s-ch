@@ -290,6 +290,12 @@ function Navbar({ tuKhoaTimKiem, setTuKhoaTimKiem }: NavbarProps) {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/lich-su-mua-hang" className="dropdown-item">
+                  <i className="fas fa-heart me-2"></i>
+                    Danh sách yêu thích
+                  </Link>
+                </li>
+                <li>
                   <hr className="dropdown-divider" />
                 </li>
                 <li>
