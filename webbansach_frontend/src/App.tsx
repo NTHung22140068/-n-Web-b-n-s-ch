@@ -14,6 +14,7 @@ import GioHangPage from "./layouts/cart/GioHangPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DanhSachYeuThich from './layouts/favorites/DanhSachYeuThich';
+import ThanhToan from './layouts/checkout/ThanhToan';
 
 function App() {
   const [tuKhoaTimKiem, setTuKhoaTimKiem] = useState("");
@@ -45,6 +46,7 @@ function App() {
           <Route path="/lien-he" element={<LienHePage />} />
           <Route path="/gio-hang" element={<GioHangPage />} />
           <Route path='/danh-sach-yeu-thich' element={<DanhSachYeuThich />} />
+          <Route path='/thanh-toan' element={<ThanhToan />} />
         </Routes>
         <Footer />
         <ToastContainer

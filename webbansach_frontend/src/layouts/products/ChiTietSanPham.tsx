@@ -82,15 +82,16 @@ const ChiTietSanPham: React.FC = () => {
     }
 
     if (sach && sach.tenSach && sach.giaBan) {
-      const success = await addToCart(
-        sach.maSach,
-        sach.tenSach,
-        sach.giaBan,
-        soLuong
-      );
-      if (success) {
-        navigate('/gio-hang');
-      }
+      navigate('/thanh-toan', {
+        state: {
+          sanPhamMua: [{
+            maSach: sach.maSach,
+            tenSach: sach.tenSach,
+            giaBan: sach.giaBan,
+            soLuong: soLuong
+          }]
+        }
+      });
     }
   };
 
