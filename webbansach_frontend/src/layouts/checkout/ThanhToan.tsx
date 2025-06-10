@@ -21,6 +21,10 @@ const ThanhToan: React.FC = () => {
         diaChiGiaoHang: '',
         ghiChu: ''
     });
+    const [hinhThucGiaoHang, setHinhThucGiaoHang] = useState('1'); // 1: Giao hàng tiêu chuẩn
+    const [hinhThucThanhToan, setHinhThucThanhToan] = useState('1'); // 1: Thanh toán khi nhận hàng
+    const [phiGiaoHang, setPhiGiaoHang] = useState(30000); // Phí giao hàng mặc định
+    const [phiThanhToan, setPhiThanhToan] = useState(0); // Phí thanh toán mặc định
     const [dangXuLy, setDangXuLy] = useState(false);
     const [thongBao, setThongBao] = useState<string>('');
 
@@ -47,12 +51,23 @@ const ThanhToan: React.FC = () => {
         }
     }, [location, navigate]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setThongTinGiaoHang(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        
+        if (name === 'hinhThucGiaoHang') {
+            setHinhThucGiaoHang(value);
+            // Cập nhật phí giao hàng dựa trên hình thức
+            setPhiGiaoHang(value === '1' ? 30000 : 50000);
+        } else if (name === 'hinhThucThanhToan') {
+            setHinhThucThanhToan(value);
+            // Cập nhật phí thanh toán dựa trên hình thức
+            setPhiThanhToan(value === '2' ? tongTien * 0.02 : 0); // Phí 2% cho thanh toán online
+        } else {
+            setThongTinGiaoHang(prev => ({
+                ...prev,
+                [name]: value
+            }));
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -71,9 +86,11 @@ const ThanhToan: React.FC = () => {
                 nguoiDung: { maNguoiDung: user.maNguoiDung },
                 diaChiNhanHang: thongTinGiaoHang.diaChiGiaoHang,
                 tongTienSanPham: tongTien,
-                chiPhiGiaoHang: 0, // Có thể thay đổi tùy logic
-                chiPhiThanhToan: 0, // Có thể thay đổi tùy logic
-                tongTien: tongTien,
+                chiPhiGiaoHang: phiGiaoHang,
+                chiPhiThanhToan: phiThanhToan,
+                tongTien: tongTien + phiGiaoHang + phiThanhToan,
+                hinhThucThanhToan: { maHinhThucThanhToan: parseInt(hinhThucThanhToan) },
+                hinhThucGiaoHang: { maHinhThucGiaoHang: parseInt(hinhThucGiaoHang) },
                 danhSachChiTietDonHang: sanPhamMua.map(sp => ({
                     sach: { maSach: sp.maSach },
                     soLuong: sp.soLuong,
@@ -83,7 +100,7 @@ const ThanhToan: React.FC = () => {
 
             const response = await taoDonHang(donHang);
             if (response) {
-                setThongBao('Đặt hàng thành công!');
+                setThongBao('Đặt hàng thành công! Cảm ơn bạn đã mua hàng.');
                 setTimeout(() => {
                     navigate('/don-hang/' + response.maDonHang);
                 }, 2000);
@@ -145,6 +162,32 @@ const ThanhToan: React.FC = () => {
                                     />
                                 </div>
                                 <div className="mb-3">
+                                    <label className="form-label">Hình thức giao hàng</label>
+                                    <select
+                                        className="form-select"
+                                        name="hinhThucGiaoHang"
+                                        value={hinhThucGiaoHang}
+                                        onChange={handleInputChange}
+                                        required
+                                    >
+                                        <option value="1">Giao hàng tiêu chuẩn (30.000đ)</option>
+                                        <option value="2">Giao hàng nhanh (50.000đ)</option>
+                                    </select>
+                                </div>
+                                <div className="mb-3">
+                                    <label className="form-label">Hình thức thanh toán</label>
+                                    <select
+                                        className="form-select"
+                                        name="hinhThucThanhToan"
+                                        value={hinhThucThanhToan}
+                                        onChange={handleInputChange}
+                                        required
+                                    >
+                                        <option value="1">Thanh toán khi nhận hàng</option>
+                                        <option value="2">Thanh toán online (Phí 2%)</option>
+                                    </select>
+                                </div>
+                                <div className="mb-3">
                                     <label className="form-label">Ghi chú</label>
                                     <textarea
                                         className="form-control"
@@ -181,9 +224,22 @@ const ThanhToan: React.FC = () => {
                                 </div>
                             ))}
                             <hr />
+                            <div className="d-flex justify-content-between mb-2">
+                                <div>Tạm tính:</div>
+                                <div>{dinhDangSo(tongTien)} đ</div>
+                            </div>
+                            <div className="d-flex justify-content-between mb-2">
+                                <div>Phí giao hàng:</div>
+                                <div>{dinhDangSo(phiGiaoHang)} đ</div>
+                            </div>
+                            <div className="d-flex justify-content-between mb-2">
+                                <div>Phí thanh toán:</div>
+                                <div>{dinhDangSo(phiThanhToan)} đ</div>
+                            </div>
+                            <hr />
                             <div className="d-flex justify-content-between">
                                 <strong>Tổng cộng:</strong>
-                                <strong>{dinhDangSo(tongTien)} đ</strong>
+                                <strong>{dinhDangSo(tongTien + phiGiaoHang + phiThanhToan)} đ</strong>
                             </div>
                         </div>
                     </div>
